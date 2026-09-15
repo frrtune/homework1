@@ -46,3 +46,51 @@ public:
         }
     }
 };
+
+template <typename T>
+class SharedPtrArr {
+private:
+    T* ptr;
+    int* ref_count;
+public:
+    SharedPtrArr(T* p = nullptr) : ptr(p), ref_count(new int(1)) {}
+
+    SharedPtrArr(const SharedPtrArr& other)
+        : ptr(other.ptr), ref_count(other.ref_count) {
+        ++(*ref_count);
+    }
+
+    SharedPtrArr& operator=(const SharedPtrArr& other) {
+        if (this != &other) {
+            if (--(*ref_count) == 0) {
+                delete[] ptr;
+                delete ref_count;
+            }
+            ptr = other.ptr;
+            ref_count = other.ref_count;
+            ++(*ref_count);
+        }
+        return *this;
+    }
+
+    ~SharedPtrArr() {
+        if (--(*ref_count) == 0) {
+            delete[] ptr;
+            delete ref_count;
+        }
+    }
+
+    T* get() const { return ptr; }
+    T& operator[](size_t idx) const {return ptr[idx];}
+
+    void reset(T* p = nullptr) {
+        if (ptr != p) {
+            if (--(*ref_count) == 0) {
+                delete[] ptr;
+                delete ref_count;
+            }
+            ptr = p;
+            ref_count = new int(1);
+        }
+    }
+};
